@@ -114,9 +114,7 @@ export default function RaceTrack({ racers }: RaceTrackProps) {
                   </div>
 
                   <div className="shrink-0 text-right">
-                    <p className="text-4xl drop-shadow-lg sm:text-5xl">
-                      {racer.car}
-                    </p>
+                   
                   </div>
                 </div>
 
@@ -141,19 +139,53 @@ export default function RaceTrack({ racers }: RaceTrackProps) {
                     </p>
                   </div>
 
-                  <div className="relative h-5 overflow-hidden rounded-full border border-white/10 bg-zinc-800 shadow-inner">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-800 via-red-600 to-red-400 shadow-[0_0_18px_rgba(239,68,68,0.65)] transition-all duration-700 ease-out"
-                      style={{ width: `${progress}%` }}
-                    />
+                  <div className="relative h-28 overflow-hidden rounded-2xl border-y-4 border-white/20 bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 shadow-inner sm:h-32">
+  {/* アスファルトの模様 */}
+  <div className="absolute inset-0 opacity-30 [background-image:repeating-linear-gradient(90deg,transparent_0,transparent_44px,rgba(255,255,255,0.08)_44px,rgba(255,255,255,0.08)_46px)]" />
 
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-b from-white/30 to-transparent transition-all duration-700 ease-out"
-                      style={{ width: `${progress}%` }}
-                    />
+  {/* 中央の白線 */}
+  <div className="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.8)_0,rgba(255,255,255,0.8)_24px,transparent_24px,transparent_48px)] opacity-60" />
 
-                    <div className="absolute inset-0 opacity-20 [background-image:repeating-linear-gradient(135deg,transparent,transparent_8px,white_8px,white_10px)]" />
-                  </div>
+  {/* スタートライン */}
+  <div className="absolute inset-y-0 left-0 w-3 bg-[repeating-linear-gradient(180deg,#ef4444_0,#ef4444_12px,#ffffff_12px,#ffffff_24px)]" />
+
+  {/* ゴールライン */}
+  <div className="absolute inset-y-0 right-0 w-12 border-l border-white/30 bg-[conic-gradient(#ffffff_25%,#111111_0_50%,#ffffff_0_75%,#111111_0)] bg-[length:20px_20px]" />
+
+  <div className="absolute right-1 top-2 rounded bg-black/90 px-2 py-1 text-[9px] font-black tracking-widest text-white">
+    GOAL
+  </div>
+
+  {/* 車 */}
+  <div
+    className="absolute bottom-4 z-20 transition-all duration-1000 ease-out"
+    style={{
+      left: `${progress}%`,
+      transform: `translateX(-${progress}%)`,
+    }}
+  >
+    <div className="relative">
+      {/* 車の後ろのスピード線 */}
+      {progress > 0 && progress < 100 && (
+        <div className="absolute right-full top-1/2 mr-1 h-2 w-12 -translate-y-1/2 rounded-full bg-white/20 blur-sm sm:w-20" />
+      )}
+
+      {/* 絵文字を右向きに反転 */}
+      <div
+        className="text-5xl drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)] sm:text-6xl"
+        style={{ transform: "scaleX(-1)" }}
+      >
+        {racer.car}
+      </div>
+    </div>
+  </div>
+
+  {/* 下部の赤い進捗ライン */}
+  <div
+    className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-red-900 via-red-500 to-red-300 shadow-[0_0_14px_rgba(239,68,68,0.7)] transition-all duration-1000 ease-out"
+    style={{ width: `${progress}%` }}
+  />
+</div>
 
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                     {isCompleted ? (
