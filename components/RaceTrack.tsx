@@ -80,12 +80,17 @@ export default function RaceTrack({ racers }: RaceTrackProps) {
           const remaining = Math.max(0, 100 - progress);
           const rank = getRankDisplay(index);
           const isCompleted = progress >= 100;
+          const isLeader = index === 0;
 
           return (
             <article
-              key={racer.id}
-              className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-zinc-900 via-black to-zinc-950 p-5 shadow-2xl transition duration-300 hover:-translate-y-1 hover:border-red-500/50 sm:p-7"
-            >
+  key={racer.id}
+  className={`group relative overflow-hidden rounded-3xl border bg-gradient-to-br from-zinc-900 via-black to-zinc-950 p-5 transition duration-300 hover:-translate-y-1 sm:p-7 ${
+    isLeader
+      ? "border-yellow-400/70 shadow-[0_0_45px_rgba(250,204,21,0.22)]"
+      : "border-white/10 shadow-2xl hover:border-red-500/50"
+  }`}
+>
               <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-red-600/10 blur-3xl" />
 
               <div className="pointer-events-none absolute bottom-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-red-500/70 to-transparent" />
@@ -139,7 +144,7 @@ export default function RaceTrack({ racers }: RaceTrackProps) {
                     </p>
                   </div>
 
-                  <div className="relative h-28 overflow-hidden rounded-2xl border-y-4 border-white/20 bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 shadow-inner sm:h-32">
+                  <div className="relative h-32 overflow-hidden rounded-2xl border-y-4 border-white/20 bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 shadow-inner sm:h-32">
   {/* アスファルトの模様 */}
   <div className="absolute inset-0 opacity-30 [background-image:repeating-linear-gradient(90deg,transparent_0,transparent_44px,rgba(255,255,255,0.08)_44px,rgba(255,255,255,0.08)_46px)]" />
 
@@ -158,7 +163,7 @@ export default function RaceTrack({ racers }: RaceTrackProps) {
 
   {/* 車 */}
   <div
-    className="absolute bottom-4 z-20 transition-all duration-1000 ease-out"
+    className="absolute bottom-5 z-20 transition-all duration-1000 ease-out sm:bottom-6"
     style={{
       left: `${progress}%`,
       transform: `translateX(-${progress}%)`,
@@ -172,7 +177,7 @@ export default function RaceTrack({ racers }: RaceTrackProps) {
 
       {/* 絵文字を右向きに反転 */}
       <div
-        className="text-5xl drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)] sm:text-6xl"
+        className="text-6xl drop-shadow-[0_12px_10px_rgba(0,0,0,0.85)] sm:text-7xl"
         style={{ transform: "scaleX(-1)" }}
       >
         {racer.car}
