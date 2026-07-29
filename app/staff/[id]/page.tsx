@@ -35,7 +35,7 @@ export default async function StaffPage({ params }: StaffPageProps) {
 
   // 今回は画面の土台を確認するため、仮データを表示します。
   // 次の工程でFirestoreのスタッフ情報につなげます。
-  const docRef = doc(db, "racers", id);
+  const docRef = doc(db, "staffs", id);
 const docSnap = await getDoc(docRef);
 
 if (!docSnap.exists()) {

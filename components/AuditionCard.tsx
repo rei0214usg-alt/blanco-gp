@@ -1,4 +1,4 @@
-const AUDITION_DATE = "2026-11-16";
+
 
 function calculateRemainingDays(targetDate: string) {
   const today = new Date();
@@ -20,8 +20,14 @@ function calculateRemainingDays(targetDate: string) {
   return remainingDays;
 }
 
-export default function AuditionCard() {
-  const remainingDays = calculateRemainingDays(AUDITION_DATE);
+type AuditionCardProps = {
+  auditionDate: string;
+};
+
+export default function AuditionCard({
+  auditionDate,
+}: AuditionCardProps) {
+  const remainingDays = calculateRemainingDays(auditionDate);
 
   const formattedDate = new Intl.DateTimeFormat("ja-JP", {
     year: "numeric",
@@ -29,7 +35,7 @@ export default function AuditionCard() {
     day: "2-digit",
     weekday: "short",
     timeZone: "Asia/Tokyo",
-  }).format(new Date(`${AUDITION_DATE}T00:00:00+09:00`));
+  }).format(new Date(`${auditionDate}T00:00:00+09:00`));
 
   return (
     <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">

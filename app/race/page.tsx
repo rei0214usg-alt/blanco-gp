@@ -13,6 +13,7 @@ type Racer = {
   name: string;
   progress: number;
   car: string;
+  auditionDate: string;
 };
 
 export default function RacePage() {
@@ -21,7 +22,7 @@ export default function RacePage() {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    const racersCollection = collection(db, "racers");
+    const racersCollection = collection(db, "staffs");
 
     const unsubscribe = onSnapshot(
       racersCollection,
@@ -30,11 +31,12 @@ export default function RacePage() {
           const data = document.data();
 
           return {
-            id: document.id,
-            name: String(data.name ?? ""),
-            progress: Number(data.progress ?? 0),
-            car: String(data.car ?? "🚗"),
-          };
+  id: document.id,
+  name: String(data.name ?? ""),
+  progress: Number(data.progress ?? 0),
+  car: String(data.car ?? "🚗"),
+  auditionDate: String(data.auditionDate ?? ""),
+};
         });
 
         racerData.sort((a, b) => b.progress - a.progress);
@@ -52,13 +54,16 @@ export default function RacePage() {
 
     return () => unsubscribe();
   }, []);
-
+const nextAuditionDate =
+  racers.length > 0 ? racers[0].auditionDate : "";
   return (
     <main className="min-h-screen bg-white px-5 py-8">
       <Logo />
 
       <section className="mx-auto mt-10 max-w-4xl">
-        <AuditionCard />
+        {nextAuditionDate && (
+  <AuditionCard auditionDate={nextAuditionDate} />
+)}
 
         <div className="mb-8 mt-10 flex items-end justify-between">
           <div>

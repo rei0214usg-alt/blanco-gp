@@ -19,7 +19,7 @@ export type Racer = {
   active: boolean;
 };
 
-const racersRef = collection(db, "racers");
+const racersRef = collection(db, "staffs");
 
 // 一覧取得
 export async function getRacers(): Promise<Racer[]> {
@@ -55,6 +55,6 @@ export async function updateRacer(
   id: string,
   data: Partial<Racer>
 ) {
-  const racerRef = doc(db, "racers", id);
+  const racerRef = doc(db, "staffs", id);
   await updateDoc(racerRef, data);
 }

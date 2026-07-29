@@ -1,12 +1,14 @@
 "use client";
-
+import EditStaffForm from "./components/EditStaffForm";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
+  addDoc,
   collection,
   doc,
   increment,
   onSnapshot,
+  serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
@@ -18,6 +20,9 @@ type Racer = {
   name: string;
   progress: number;
   car: string;
+  auditionDate: string;
+  challengeStatement: string;
+  status: string;
 };
 
 export default function AdminPage() {
@@ -29,8 +34,23 @@ export default function AdminPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+const [newName, setNewName] = useState("");
+const [newCar, setNewCar] = useState("🚗");
+const [newProgress, setNewProgress] = useState(0);
+const [newAuditionDate, setNewAuditionDate] = useState("");
+const [newChallengeStatement, setNewChallengeStatement] = useState("");
+const [newStatus, setNewStatus] = useState("MODEL_CHALLENGE");
+const [isAddingStaff, setIsAddingStaff] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editCar, setEditCar] = useState("");
+  const [editProgress, setEditProgress] = useState(0);
+  const [editAuditionDate, setEditAuditionDate] = useState("");
+  const [editChallengeStatement, setEditChallengeStatement] = useState("");
+  const [editStatus, setEditStatus] = useState("MODEL_CHALLENGE");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
-  useEffect(() => {
+useEffect(() => {
     let unsubscribeRacers: (() => void) | undefined;
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -42,7 +62,7 @@ export default function AdminPage() {
 
       setIsCheckingAuth(false);
 
-      const racersCollection = collection(db, "racers");
+      const racersCollection = collection(db, "staffs");
 
       unsubscribeRacers = onSnapshot(
         racersCollection,
@@ -51,11 +71,15 @@ export default function AdminPage() {
             const data = racerDocument.data();
 
             return {
-              id: racerDocument.id,
-              name: String(data.name ?? ""),
-              progress: Number(data.progress ?? 0),
-              car: String(data.car ?? "🚗"),
-            };
+  id: racerDocument.id,
+  name: String(data.name ?? ""),
+  progress: Number(data.progress ?? 0),
+  car: String(data.car ?? "🚗"),
+  auditionDate: String(data.auditionDate ?? ""),
+  challengeStatement: String(data.challengeStatement ?? ""),
+  status: String(data.status ?? "MODEL_CHALLENGE"),
+};
+            
           });
 
           racerData.sort((a, b) => b.progress - a.progress);
@@ -81,6 +105,89 @@ export default function AdminPage() {
     };
   }, [router]);
 
+  async function addStaff() {
+  if (!newName.trim()) {
+    setErrorMessage("スタッフ名を入力してください。");
+    return;
+  }
+
+  try {
+    setIsAddingStaff(true);
+    setErrorMessage("");
+
+    await addDoc(collection(db, "staffs"), {
+      name: newName.trim(),
+      car: newCar.trim() || "🚗",
+      progress: newProgress,
+      auditionDate: newAuditionDate,
+      challengeStatement: newChallengeStatement.trim(),
+      status: newStatus,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    setNewName("");
+    setNewCar("🚗");
+    setNewProgress(0);
+    setNewAuditionDate("");
+    setNewChallengeStatement("");
+    setNewStatus("MODEL_CHALLENGE");
+  } catch (error) {
+    console.error("スタッフの追加に失敗しました:", error);
+    setErrorMessage("スタッフを追加できませんでした。");
+  } finally {
+    setIsAddingStaff(false);
+  }
+}
+function startEditing(racer: Racer) {
+  setEditingId(racer.id);
+  setEditName(racer.name);
+  setEditCar(racer.car);
+  setEditProgress(racer.progress);
+  setEditAuditionDate(racer.auditionDate);
+  setEditChallengeStatement(racer.challengeStatement);
+  setEditStatus(racer.status);
+  setErrorMessage("");
+}
+async function saveEdit() {
+  if (!editingId) {
+    return;
+  }
+
+  if (!editName.trim()) {
+    setErrorMessage("スタッフ名を入力してください。");
+    return;
+  }
+
+  if (editProgress < 0 || editProgress > 100) {
+    setErrorMessage("進捗は0〜100で入力してください。");
+    return;
+  }
+
+  try {
+    setIsSavingEdit(true);
+    setErrorMessage("");
+
+    const staffReference = doc(db, "staffs", editingId);
+
+    await updateDoc(staffReference, {
+      name: editName.trim(),
+      car: editCar.trim() || "🚗",
+      progress: editProgress,
+      auditionDate: editAuditionDate,
+      challengeStatement: editChallengeStatement.trim(),
+      status: editStatus,
+      updatedAt: serverTimestamp(),
+    });
+
+    setEditingId(null);
+  } catch (error) {
+    console.error("スタッフ情報の更新に失敗しました:", error);
+    setErrorMessage("スタッフ情報を更新できませんでした。");
+  } finally {
+    setIsSavingEdit(false);
+  }
+}
   async function changeProgress(racer: Racer, amount: number) {
     if (amount < 0 && racer.progress <= 0) {
       return;
@@ -94,7 +201,7 @@ export default function AdminPage() {
       setUpdatingId(racer.id);
       setErrorMessage("");
 
-      const racerReference = doc(db, "racers", racer.id);
+      const racerReference = doc(db, "staffs", racer.id);
 
       await updateDoc(racerReference, {
         progress: increment(amount),
@@ -164,7 +271,121 @@ export default function AdminPage() {
             {errorMessage}
           </p>
         )}
+<div className="mb-8 rounded-3xl bg-white p-6 shadow-sm">
+  <div className="mb-5">
+    <p className="text-sm font-bold tracking-[0.15em] text-red-600">
+      NEW STAFF
+    </p>
 
+    <h2 className="mt-2 text-2xl font-black text-black">
+      スタッフを追加
+    </h2>
+  </div>
+
+  <div className="space-y-4">
+    <div>
+      <label className="mb-2 block text-sm font-bold text-gray-700">
+        名前
+      </label>
+
+      <input
+        type="text"
+        value={newName}
+        onChange={(event) => setNewName(event.target.value)}
+        placeholder="例：田中太郎"
+        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-black outline-none focus:border-red-500"
+      />
+    </div>
+
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label className="mb-2 block text-sm font-bold text-gray-700">
+          車
+        </label>
+
+        <input
+          type="text"
+          value={newCar}
+          onChange={(event) => setNewCar(event.target.value)}
+          placeholder="🚗"
+          className="w-full rounded-xl border border-gray-300 px-4 py-3 text-black outline-none focus:border-red-500"
+        />
+      </div>
+
+      <div>
+        <label className="mb-2 block text-sm font-bold text-gray-700">
+          初期進捗
+        </label>
+
+        <input
+          type="number"
+          min="0"
+          max="100"
+          value={newProgress}
+          onChange={(event) =>
+            setNewProgress(Number(event.target.value))
+          }
+          className="w-full rounded-xl border border-gray-300 px-4 py-3 text-black outline-none focus:border-red-500"
+        />
+      </div>
+    </div>
+
+    <div>
+      <label className="mb-2 block text-sm font-bold text-gray-700">
+        オーディション日
+      </label>
+
+      <input
+        type="date"
+        value={newAuditionDate}
+        onChange={(event) => setNewAuditionDate(event.target.value)}
+        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-black outline-none focus:border-red-500"
+      />
+    </div>
+
+    <div>
+      <label className="mb-2 block text-sm font-bold text-gray-700">
+        挑戦宣言
+      </label>
+
+      <textarea
+        value={newChallengeStatement}
+        onChange={(event) =>
+          setNewChallengeStatement(event.target.value)
+        }
+        placeholder="どんなスタイリストを目指すか入力してください。"
+        rows={4}
+        className="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-black outline-none focus:border-red-500"
+      />
+    </div>
+
+    <div>
+      <label className="mb-2 block text-sm font-bold text-gray-700">
+        ステータス
+      </label>
+
+      <select
+        value={newStatus}
+        onChange={(event) => setNewStatus(event.target.value)}
+        className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-red-500"
+      >
+        <option value="MODEL_CHALLENGE">100人モデル挑戦中</option>
+        <option value="MODEL_COMPLETE">100人モデル達成</option>
+        <option value="AUDITION">オーディション</option>
+        <option value="STYLIST">スタイリスト</option>
+      </select>
+    </div>
+
+    <button
+      type="button"
+      onClick={addStaff}
+      disabled={isAddingStaff}
+      className="w-full rounded-xl bg-red-600 px-5 py-4 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {isAddingStaff ? "追加中..." : "スタッフを追加する"}
+    </button>
+  </div>
+</div>
         {isLoading && (
           <p className="rounded-2xl bg-white p-6 text-center text-gray-500 shadow-sm">
             読み込み中...
@@ -201,7 +422,13 @@ export default function AdminPage() {
                       </span>
                     </p>
                   </div>
-
+<button
+  type="button"
+  onClick={() => startEditing(racer)}
+  className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-700"
+>
+  編集
+</button>
                   <div className="flex gap-3">
                     <button
                       type="button"
@@ -224,6 +451,25 @@ export default function AdminPage() {
                     </button>
                   </div>
                 </div>
+                {editingId === racer.id && (
+                  <EditStaffForm
+                    editName={editName}
+                    editCar={editCar}
+                    editProgress={editProgress}
+                    editAuditionDate={editAuditionDate}
+                    editChallengeStatement={editChallengeStatement}
+                    editStatus={editStatus}
+                    isSavingEdit={isSavingEdit}
+                    onChangeName={setEditName}
+                    onChangeCar={setEditCar}
+                    onChangeProgress={setEditProgress}
+                    onChangeAuditionDate={setEditAuditionDate}
+                    onChangeChallengeStatement={setEditChallengeStatement}
+                    onChangeStatus={setEditStatus}
+                    onSave={saveEdit}
+                    onCancel={() => setEditingId(null)}
+                  />
+                )}
               </article>
             );
           })}
