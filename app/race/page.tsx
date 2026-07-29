@@ -5,7 +5,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 
 import AuditionCard from "@/components/AuditionCard";
 import Logo from "@/components/Logo";
-import RaceTrack from "@/components/RaceTrack";
+import RaceTrack from "@/components/RaceTrackV2";
 import { db } from "@/lib/firebase";
 
 type Racer = {
