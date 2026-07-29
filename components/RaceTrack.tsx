@@ -1,3 +1,4 @@
+import Link from "next/link";
 type Racer = {
   id: string;
   name: string;
@@ -43,7 +44,50 @@ function getRankDisplay(index: number) {
     rankStyle: "border-white/20 bg-white/10 text-white",
   };
 }
+function getRaceStage(progress: number) {
+  if (progress >= 100) {
+    return {
+      label: "GOAL",
+      textStyle: "text-yellow-300",
+      badgeStyle:
+        "border-yellow-400/50 bg-yellow-400/10 text-yellow-300",
+    };
+  }
 
+  if (progress >= 90) {
+    return {
+      label: "FINAL LAP",
+      textStyle: "text-red-400",
+      badgeStyle:
+        "animate-pulse border-red-500/60 bg-red-500/15 text-red-300",
+    };
+  }
+
+  if (progress >= 60) {
+    return {
+      label: "CHARGE",
+      textStyle: "text-orange-400",
+      badgeStyle:
+        "border-orange-500/40 bg-orange-500/10 text-orange-300",
+    };
+  }
+
+  if (progress >= 30) {
+    return {
+      label: "MIDDLE STAGE",
+      textStyle: "text-blue-400",
+      badgeStyle:
+        "border-blue-500/40 bg-blue-500/10 text-blue-300",
+    };
+  }
+
+  return {
+    label: "START",
+    textStyle: "text-zinc-400",
+    badgeStyle:
+      "border-white/20 bg-white/5 text-zinc-300",
+  };
+}
 export default function RaceTrack({ racers }: RaceTrackProps) {
   const sortedRacers = [...racers].sort(
     (a, b) => b.progress - a.progress
@@ -83,14 +127,19 @@ export default function RaceTrack({ racers }: RaceTrackProps) {
           const isLeader = index === 0;
 
           return (
-            <article
-  key={racer.id}
-  className={`group relative overflow-hidden rounded-3xl border bg-gradient-to-br from-zinc-900 via-black to-zinc-950 p-5 transition duration-300 hover:-translate-y-1 sm:p-7 ${
-    isLeader
-      ? "border-yellow-400/70 shadow-[0_0_45px_rgba(250,204,21,0.22)]"
-      : "border-white/10 shadow-2xl hover:border-red-500/50"
-  }`}
->
+  <Link
+    key={racer.id}
+    href={`/staff/${racer.id}`}
+    aria-label={`${racer.name}のスタッフ詳細を見る`}
+    className="block rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-4 focus-visible:ring-offset-black"
+  >
+    <article
+      className={`group relative cursor-pointer overflow-hidden rounded-3xl border bg-gradient-to-br from-zinc-900 via-black to-zinc-950 p-5 transition duration-300 hover:-translate-y-1 sm:p-7 ${
+        isLeader
+          ? "border-yellow-400/70 shadow-[0_0_45px_rgba(250,204,21,0.22)]"
+          : "border-white/10 shadow-2xl hover:border-red-500/50"
+      }`}
+    >
               <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-red-600/10 blur-3xl" />
 
               <div className="pointer-events-none absolute bottom-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-red-500/70 to-transparent" />
@@ -211,15 +260,16 @@ export default function RaceTrack({ racers }: RaceTrackProps) {
                       </div>
                     )}
 
-                    <p className="text-xs font-bold tracking-[0.2em] text-zinc-600">
+                                        <p className="text-xs font-bold tracking-[0.2em] text-zinc-600">
                       BLANCO GRAND PRIX
                     </p>
                   </div>
                 </div>
               </div>
             </article>
-          );
-        })}
+          </Link>
+        );
+      })}
       </div>
 
       {sortedRacers.length === 0 && (
