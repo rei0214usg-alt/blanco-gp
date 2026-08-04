@@ -26,7 +26,7 @@ export default function Header() {
 
         <nav className="flex items-center gap-3">
           <Link
-            href="/"
+            href="/home"
             className="rounded-xl px-3 py-2 text-sm font-bold text-white hover:bg-white/10"
           >
             🏠 ホーム

@@ -187,14 +187,14 @@ export default function TodaySupport() {
         )}
 
       <div className="mt-5 space-y-3">
-        {supports.map((support) => {
+        {supports.map((support, index) => {
           const staffName =
             staffNames[support.staffId] ??
             "スタッフ";
 
           return (
             <Link
-              key={support.id}
+              key={`${support.id}-${index}`}
               href={`/staff/${support.staffId}`}
               className="block rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:border-red-500/40 hover:bg-white/5"
             >
