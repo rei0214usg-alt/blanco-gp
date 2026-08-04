@@ -75,10 +75,18 @@ export default function GoogleLoginButton() {
 
     try {
       await signOut(auth);
-    } catch (error) {
-      console.error("ログアウトに失敗しました。", error);
-      setErrorMessage("ログアウトに失敗しました。");
-    } finally {
+    } catch (error: unknown) {
+  console.error("Googleログインに失敗しました。", error);
+
+  const firebaseError = error as {
+    code?: string;
+    message?: string;
+  };
+
+  setErrorMessage(
+    `ログイン失敗：${firebaseError.code ?? "不明なエラー"}`
+  );
+} finally {
       setIsProcessing(false);
     }
   };
