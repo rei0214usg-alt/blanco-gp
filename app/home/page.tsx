@@ -1,7 +1,87 @@
+"use client";
 import Link from "next/link";
 import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
 import TodaySupport from "@/components/home/TodaySupport";
+import { useEffect, useState } from "react";
+import {
+  collection,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+type Racer = {
+  id: string;
+  name: string;
+  progress: number;
+};
+type LatestComment = {
+  id: string;
+  staffId: string;
+  userName: string;
+  message: string;
+};
 export default function HomePage() {
+  const [racers, setRacers] = useState<Racer[]>([]);
+const [latestComment, setLatestComment] =
+  useState<LatestComment | null>(null);
+  useEffect(() => {
+  const commentsQuery = query(
+    collection(db, "comments"),
+    orderBy("createdAt", "desc"),
+    limit(1)
+  );
+
+  const unsubscribe = onSnapshot(
+    commentsQuery,
+    (snapshot) => {
+      if (snapshot.empty) {
+        setLatestComment(null);
+        return;
+      }
+
+      const document = snapshot.docs[0];
+      const data = document.data();
+
+      setLatestComment({
+        id: document.id,
+        staffId: String(data.staffId ?? ""),
+        userName: String(data.userName ?? "匿名"),
+        message: String(data.message ?? ""),
+      });
+    },
+    (error) => {
+      console.error("新着コメントの取得に失敗しました:", error);
+    }
+  );
+
+  return () => unsubscribe();
+}, []);
+useEffect(() => {
+  const unsubscribe = onSnapshot(
+    collection(db, "staffs"),
+    (snapshot) => {
+      const racerData = snapshot.docs.map((document) => {
+        const data = document.data();
+
+        return {
+          id: document.id,
+          name: String(data.name ?? ""),
+          progress: Number(data.progress ?? 0),
+        };
+      });
+
+      racerData.sort((a, b) => b.progress - a.progress);
+      setRacers(racerData.slice(0, 3));
+    },
+    (error) => {
+      console.error("ランキングの取得に失敗しました:", error);
+    }
+  );
+
+  return () => unsubscribe();
+}, []);
   return (
     <main className="min-h-screen bg-neutral-950 px-4 py-6 text-white">
       <div className="mx-auto max-w-md">
@@ -37,15 +117,24 @@ export default function HomePage() {
               新着コメント
             </h2>
 
-            <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
-              <p className="text-sm font-bold">
-                大坂龍平さんへ
-              </p>
+            {latestComment ? (
+  <Link
+    href={`/staff/${latestComment.staffId}`}
+    className="mt-5 block rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:bg-white/5"
+  >
+    <p className="text-sm font-bold">
+      {latestComment.userName}さんから
+    </p>
 
-              <p className="mt-2 leading-7 text-neutral-300">
-                デビュー応援しています🔥
-              </p>
-            </div>
+    <p className="mt-2 leading-7 text-neutral-300">
+      {latestComment.message}
+    </p>
+  </Link>
+) : (
+  <div className="mt-5 rounded-2xl border border-dashed border-white/10 p-4 text-sm text-neutral-500">
+    まだコメントはありません
+  </div>
+)}
           </section>
 
           <section className="rounded-3xl border border-white/10 bg-neutral-900 p-6">
@@ -69,36 +158,26 @@ export default function HomePage() {
             </div>
 
             <div className="mt-5 space-y-3">
-              <div className="flex items-center justify-between rounded-2xl border border-yellow-400/30 bg-yellow-400/5 p-4">
-                <p className="font-black">
-                  🥇 大坂龍平
-                </p>
+  {racers.map((racer, index) => (
+    <Link
+      key={racer.id}
+      href={`/staff/${racer.id}`}
+      className={`flex items-center justify-between rounded-2xl border p-4 transition hover:bg-white/5 ${
+        index === 0
+          ? "border-yellow-400/30 bg-yellow-400/5"
+          : "border-white/10 bg-black/20"
+      }`}
+    >
+      <p className="font-black">
+        {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"} {racer.name}
+      </p>
 
-                <p className="font-black">
-                  84 / 100
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="font-black">
-                  🥈 田中
-                </p>
-
-                <p className="font-black">
-                  71 / 100
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="font-black">
-                  🥉 佐藤
-                </p>
-
-                <p className="font-black">
-                  63 / 100
-                </p>
-              </div>
-            </div>
+      <p className="font-black">
+        {racer.progress} / 100
+      </p>
+    </Link>
+  ))}
+</div>
           </section>
 
           <section className="rounded-3xl border border-white/10 bg-neutral-900 p-6">
