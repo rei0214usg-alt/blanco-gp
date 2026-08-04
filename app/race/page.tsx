@@ -1,5 +1,5 @@
 "use client";
-import Header from "@/components/Header";
+import Header from "@/components/AppHeader";
 import { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 
