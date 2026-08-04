@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   GoogleAuthProvider,
@@ -16,6 +17,7 @@ import {
 import { auth, db } from "@/lib/firebase";
 
 export default function GoogleLoginButton() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -61,6 +63,14 @@ export default function GoogleLoginButton() {
       );
 
       setUser(loggedInUser);
+router.back();
+
+      const returnTo =
+  sessionStorage.getItem("loginReturnTo") || "/race";
+
+sessionStorage.removeItem("loginReturnTo");
+
+router.replace(returnTo);
     } catch (error) {
       console.error("Googleログインに失敗しました。", error);
       setErrorMessage("Googleログインに失敗しました。");

@@ -1,5 +1,5 @@
 "use client";
-
+import Header from "@/components/Header";
 import { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 
@@ -59,6 +59,9 @@ export default function RacePage() {
 const nextAuditionDate =
   racers.length > 0 ? racers[0].auditionDate : "";
   return (
+  <>
+    <Header />
+
     <main className="min-h-screen bg-white px-5 py-8">
       <Logo />
 
@@ -103,6 +106,7 @@ const nextAuditionDate =
           <RaceTrack racers={racers} />
         )}
       </section>
-    </main>
-  );
+            </main>
+  </>
+);
 }
