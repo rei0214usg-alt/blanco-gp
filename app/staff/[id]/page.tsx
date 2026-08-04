@@ -12,16 +12,7 @@ type StaffPageProps = {
   }>;
 };
 
-const sampleStaff: Staff = {
-  id: "ryuhei",
-  name: "大坂 龍平",
-  progress: 82,
-  status: "MODEL_CHALLENGE",
-  challengeStatement:
-    "毎月会うことが楽しみと思っていただけるスタイリストになります。",
-  auditionDate: "2026-11-16",
-  car: "🏎️",
-};
+
 
 const statusLabels = {
   MODEL_CHALLENGE: "MODEL CHALLENGE",
@@ -35,13 +26,22 @@ export default async function StaffPage({ params }: StaffPageProps) {
 
   // 今回は画面の土台を確認するため、仮データを表示します。
   // 次の工程でFirestoreのスタッフ情報につなげます。
-  const docRef = doc(db, "staffs", id);
+ const docRef = doc(db, "staffs", id);
 const docSnap = await getDoc(docRef);
 
 if (!docSnap.exists()) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-950 text-white">
-      スタッフが見つかりません
+    <main className="flex min-h-screen items-center justify-center bg-neutral-950 px-5 text-white">
+      <div className="text-center">
+        <h1 className="text-2xl font-black">スタッフが見つかりません</h1>
+
+        <Link
+          href="/race"
+          className="mt-6 inline-block rounded-xl bg-red-600 px-5 py-3 font-bold"
+        >
+          レース画面へ戻る
+        </Link>
+      </div>
     </main>
   );
 }
@@ -49,11 +49,14 @@ if (!docSnap.exists()) {
 const data = docSnap.data();
 
 const staff: Staff = {
-  ...sampleStaff,
   id: docSnap.id,
-  name: data.name,
-  progress: data.progress,
-  car: data.car,
+  name: String(data.name ?? ""),
+  progress: Number(data.progress ?? 0),
+  status: String(data.status ?? "MODEL_CHALLENGE") as Staff["status"],
+  challengeStatement: String(data.challengeStatement ?? ""),
+  auditionDate: String(data.auditionDate ?? ""),
+  car: String(data.car ?? "🚗"),
+  photoURL: String(data.photoURL ?? ""),
 };
 
   const remaining = Math.max(100 - staff.progress, 0);
@@ -75,13 +78,23 @@ const staff: Staff = {
 
         <section className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-neutral-900 shadow-2xl">
           <div className="border-b border-white/10 px-6 py-8 text-center">
-            <div
-              className="mb-3 text-6xl"
-              role="img"
-              aria-label="レーシングカー"
-            >
-              {staff.car}
-            </div>
+            <div className="mb-6 flex justify-center">
+  {staff.photoURL ? (
+    <img
+      src={staff.photoURL}
+      alt={staff.name}
+      className="h-32 w-32 rounded-full object-cover border-4 border-white"
+    />
+  ) : (
+    <div
+      className="flex h-32 w-32 items-center justify-center rounded-full bg-neutral-700 text-5xl"
+      role="img"
+      aria-label="レーシングカー"
+    >
+      {staff.car}
+    </div>
+  )}
+</div>
 
             <p className="text-xs font-bold tracking-[0.3em] text-neutral-400">
               BLANCO GP

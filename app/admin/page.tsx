@@ -11,9 +11,10 @@ import {
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useRouter } from "next/navigation";
 
-import { auth, db } from "@/lib/firebase";
+import { auth, db, storage } from "@/lib/firebase";
 
 type Racer = {
   id: string;
@@ -23,6 +24,8 @@ type Racer = {
   auditionDate: string;
   challengeStatement: string;
   status: string;
+  photoURL: string;
+  machineImageURL: string;
 };
 
 export default function AdminPage() {
@@ -49,6 +52,9 @@ const [isAddingStaff, setIsAddingStaff] = useState(false);
   const [editChallengeStatement, setEditChallengeStatement] = useState("");
   const [editStatus, setEditStatus] = useState("MODEL_CHALLENGE");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
 
 useEffect(() => {
     let unsubscribeRacers: (() => void) | undefined;
@@ -78,6 +84,8 @@ useEffect(() => {
   auditionDate: String(data.auditionDate ?? ""),
   challengeStatement: String(data.challengeStatement ?? ""),
   status: String(data.status ?? "MODEL_CHALLENGE"),
+  photoURL: String(data.photoURL ?? ""),
+  machineImageURL: String(data.machineImageURL ?? ""),
 };
             
           });
@@ -147,6 +155,7 @@ function startEditing(racer: Racer) {
   setEditAuditionDate(racer.auditionDate);
   setEditChallengeStatement(racer.challengeStatement);
   setEditStatus(racer.status);
+  setSelectedPhoto(null);
   setErrorMessage("");
 }
 async function saveEdit() {
@@ -164,11 +173,51 @@ async function saveEdit() {
     return;
   }
 
+  if (
+    selectedPhoto &&
+    !["image/jpeg", "image/png", "image/webp"].includes(
+      selectedPhoto.type
+    )
+  ) {
+    setErrorMessage(
+      "プロフィール画像はJPG・PNG・WebPを選択してください。"
+    );
+    return;
+  }
+
+  if (selectedPhoto && selectedPhoto.size > 5 * 1024 * 1024) {
+    setErrorMessage("プロフィール画像は5MB以下にしてください。");
+    return;
+  }
+
   try {
     setIsSavingEdit(true);
+    setUploadingPhoto(Boolean(selectedPhoto));
     setErrorMessage("");
 
     const staffReference = doc(db, "staffs", editingId);
+
+    let photoURL: string | undefined;
+
+    if (selectedPhoto) {
+      const extension =
+        selectedPhoto.name.split(".").pop()?.toLowerCase() || "jpg";
+
+      const photoReference = ref(
+        storage,
+        `staff-photos/${editingId}/profile-${Date.now()}.${extension}`
+      );
+
+      const uploadResult = await uploadBytes(
+        photoReference,
+        selectedPhoto,
+        {
+          contentType: selectedPhoto.type,
+        }
+      );
+
+      photoURL = await getDownloadURL(uploadResult.ref);
+    }
 
     await updateDoc(staffReference, {
       name: editName.trim(),
@@ -177,15 +226,20 @@ async function saveEdit() {
       auditionDate: editAuditionDate,
       challengeStatement: editChallengeStatement.trim(),
       status: editStatus,
+      ...(photoURL ? { photoURL } : {}),
       updatedAt: serverTimestamp(),
     });
 
+    setSelectedPhoto(null);
     setEditingId(null);
   } catch (error) {
     console.error("スタッフ情報の更新に失敗しました:", error);
-    setErrorMessage("スタッフ情報を更新できませんでした。");
+    setErrorMessage(
+      "スタッフ情報または画像を更新できませんでした。"
+    );
   } finally {
     setIsSavingEdit(false);
+    setUploadingPhoto(false);
   }
 }
   async function changeProgress(racer: Racer, amount: number) {
@@ -460,6 +514,10 @@ async function saveEdit() {
                     editChallengeStatement={editChallengeStatement}
                     editStatus={editStatus}
                     isSavingEdit={isSavingEdit}
+                    selectedPhoto={selectedPhoto}
+uploadingPhoto={uploadingPhoto}
+onSelectPhoto={setSelectedPhoto}
+
                     onChangeName={setEditName}
                     onChangeCar={setEditCar}
                     onChangeProgress={setEditProgress}

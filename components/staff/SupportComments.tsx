@@ -9,6 +9,7 @@ import {
 import {
   addDoc,
   collection,
+  getDocs,
   limit,
   onSnapshot,
   orderBy,
@@ -35,18 +36,61 @@ export default function SupportComments({
 }: SupportCommentsProps) {
   const [user, setUser] = useState<User | null>(null);
   const [comments, setComments] = useState<SupportComment[]>([]);
+  const [staffName, setStaffName] = useState("");
+  const [nickname, setNickname] = useState("");
   const [message, setMessage] = useState("");
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isPosting, setIsPosting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+useEffect(() => {
+  const savedNickname = localStorage.getItem("supportNickname");
+
+  if (savedNickname) {
+    setNickname(savedNickname);
+  }
+}, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(
       auth,
-      (currentUser) => {
-        setUser(currentUser);
-        setIsAuthLoading(false);
-      },
+      async (currentUser) => {
+  setUser(currentUser);
+
+  if (currentUser?.email) {
+    try {
+      const staffQuery = query(
+        collection(db, "staffs"),
+        where("email", "==", currentUser.email),
+        limit(1)
+      );
+
+      const staffSnapshot = await getDocs(staffQuery);
+
+      if (!staffSnapshot.empty) {
+        const staffData = staffSnapshot.docs[0].data();
+        setStaffName(String(staffData.name ?? ""));
+      } else {
+        setStaffName(
+          currentUser.displayName ??
+            currentUser.email ??
+            "名前未設定"
+        );
+      }
+    } catch (error) {
+      console.error("スタッフ名の取得に失敗しました:", error);
+
+      setStaffName(
+        currentUser.displayName ??
+          currentUser.email ??
+          "名前未設定"
+      );
+    }
+  } else {
+    setStaffName("");
+  }
+
+  setIsAuthLoading(false);
+},
     );
 
     return unsubscribe;
@@ -124,16 +168,14 @@ export default function SupportComments({
       await addDoc(collection(db, "comments"), {
         staffId,
         userId: user.uid,
-        userName:
-          user.displayName ??
-          user.email ??
-          "名前未設定",
+        
+  userName: nickname.trim() || "匿名",
         userEmail: user.email ?? "",
         userPhotoURL: user.photoURL ?? "",
         message: trimmedMessage,
         createdAt: serverTimestamp(),
       });
-
+localStorage.setItem("supportNickname", nickname.trim());
       setMessage("");
     } catch (error) {
       console.error(
@@ -185,7 +227,24 @@ export default function SupportComments({
             {user.displayName ?? user.email}
             さんとして投稿します
           </p>
+<div>
+  <label className="mb-2 block text-sm font-bold text-neutral-300">
+    ニックネーム
+  </label>
 
+  <input
+    type="text"
+    value={nickname}
+    onChange={(event) => setNickname(event.target.value)}
+    maxLength={20}
+    placeholder="例：れいちぇる、同期、○○店スタッフ"
+    className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none placeholder:text-neutral-600 focus:border-red-500"
+  />
+
+  <p className="mt-2 text-right text-xs text-neutral-500">
+    {nickname.length}/20
+  </p>
+</div>
           <textarea
             value={message}
             onChange={(event) =>

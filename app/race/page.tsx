@@ -14,6 +14,7 @@ type Racer = {
   progress: number;
   car: string;
   auditionDate: string;
+  photoURL: string;
 };
 
 export default function RacePage() {
@@ -36,6 +37,7 @@ export default function RacePage() {
   progress: Number(data.progress ?? 0),
   car: String(data.car ?? "🚗"),
   auditionDate: String(data.auditionDate ?? ""),
+  photoURL: String(data.photoURL ?? ""),
 };
         });
 

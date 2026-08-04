@@ -1,8 +1,11 @@
+import Link from "next/link";
+
 type Racer = {
   id: string;
   name: string;
   progress: number;
   car: string;
+  photoURL: string;
 };
 
 type RaceTrackV2Props = {
@@ -69,8 +72,13 @@ export default function RaceTrackV2({
             const isGoal = progress >= 100;
 
             return (
-              <article
-                key={racer.id}
+  <Link
+    key={racer.id}
+    href={`/staff/${racer.id}`}
+    className="block"
+  >
+    <article
+              
                 className={`relative border-b border-zinc-800 px-5 py-5 last:border-b-0 ${
                   isLeader
                     ? "bg-gradient-to-r from-yellow-400/10 via-black to-black"
@@ -79,9 +87,19 @@ export default function RaceTrackV2({
               >
                 <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xl font-black text-white">
-                      {getRank(index)}
-                    </div>
+                    <div className="h-12 w-12 overflow-hidden rounded-full border border-white/20 bg-neutral-800">
+ {racer.photoURL ? (
+  <img
+    src={racer.photoURL}
+    alt={racer.name}
+    className="h-full w-full object-contain"
+  />
+) : (
+  <div className="flex h-full w-full items-center justify-center text-3xl">
+    🚗
+  </div>
+)}
+</div>
 
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -184,11 +202,25 @@ export default function RaceTrackV2({
                       )}
 
                       <div
-                        className="text-5xl drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)] sm:text-6xl"
-                        style={{ transform: "scaleX(-1)" }}
-                      >
-                        {racer.car}
-                      </div>
+  className="relative h-14 w-14 overflow-hidden rounded-full border-2 border-white bg-black shadow-xl sm:h-16 sm:w-16"
+  style={{
+    transform: `rotate(${progress > 95 ? "-8deg" : "-3deg"})`,
+  }}
+>
+  {racer.photoURL ? (
+    <img
+      src={racer.photoURL}
+      alt={`${racer.name}のレーサー`}
+      className="h-full w-full object-cover"
+    />
+  ) : (
+    <div className="flex h-full w-full items-center justify-center text-4xl">
+      {racer.car}
+    </div>
+  )}
+
+  
+</div>
                     </div>
                   </div>
 
@@ -204,6 +236,7 @@ export default function RaceTrackV2({
                   />
                 </div>
               </article>
+</Link>
             );
           })}
         </div>

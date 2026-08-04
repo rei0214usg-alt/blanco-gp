@@ -9,7 +9,7 @@ export interface Staff {
 
   // 基本情報
   name: string;
-  photo?: string;
+  photoURL: string;
 
   // モデル進捗
   progress: number;

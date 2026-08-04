@@ -16,6 +16,10 @@ type EditStaffFormProps = {
   onChangeStatus: (value: string) => void;
   onSave: () => void;
   onCancel: () => void;
+  selectedPhoto: File | null;
+uploadingPhoto: boolean;
+onSelectPhoto: (file: File | null) => void;
+
 };
 
 export default function EditStaffForm({
@@ -34,12 +38,41 @@ export default function EditStaffForm({
   onChangeStatus,
   onSave,
   onCancel,
+  selectedPhoto,
+uploadingPhoto,
+onSelectPhoto,
+
 }: EditStaffFormProps) {
   return (
     <div className="mt-6 border-t border-gray-200 pt-6">
       <h3 className="mb-4 text-lg font-black text-black">
         スタッフ情報を編集
       </h3>
+<div>
+  <label className="mb-2 block text-sm font-bold text-gray-700">
+    プロフィール画像
+  </label>
+
+  <input
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+    onChange={(event) =>
+      onSelectPhoto(event.target.files?.[0] ?? null)
+    }
+    disabled={uploadingPhoto}
+    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black disabled:opacity-50"
+  />
+
+  <p className="mt-2 text-xs text-gray-500">
+    JPG・PNG・WebP形式の画像を選択してください。
+  </p>
+
+  {selectedPhoto && (
+    <p className="mt-2 text-sm font-bold text-red-600">
+      選択中：{selectedPhoto.name}
+    </p>
+  )}
+</div>
 
       <div className="space-y-4">
         <div>
