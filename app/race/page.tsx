@@ -1,7 +1,7 @@
 "use client";
 import Header from "@/components/AppHeader";
 import { useEffect, useState } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, doc, onSnapshot } from "firebase/firestore";
 
 import AuditionCard from "@/components/AuditionCard";
 import Logo from "@/components/Logo";
@@ -21,7 +21,10 @@ export default function RacePage() {
   const [racers, setRacers] = useState<Racer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [tokaiAuditionDate, setTokaiAuditionDate] = useState("");
+  const [tokyoAuditionDate, setTokyoAuditionDate] = useState("");
 
+  // スタッフ一覧を取得
   useEffect(() => {
     const racersCollection = collection(db, "staffs");
 
@@ -32,13 +35,13 @@ export default function RacePage() {
           const data = document.data();
 
           return {
-  id: document.id,
-  name: String(data.name ?? ""),
-  progress: Number(data.progress ?? 0),
-  car: String(data.car ?? "🚗"),
-  auditionDate: String(data.auditionDate ?? ""),
-  photoURL: String(data.photoURL ?? ""),
-};
+            id: document.id,
+            name: String(data.name ?? ""),
+            progress: Number(data.progress ?? 0),
+            car: String(data.car ?? "🚗"),
+            auditionDate: String(data.auditionDate ?? ""),
+            photoURL: String(data.photoURL ?? ""),
+          };
         });
 
         racerData.sort((a, b) => b.progress - a.progress);
@@ -56,8 +59,29 @@ export default function RacePage() {
 
     return () => unsubscribe();
   }, []);
-const nextAuditionDate =
-  racers.length > 0 ? racers[0].auditionDate : "";
+
+  // 東海・東京のオーディション日を取得
+  useEffect(() => {
+    const auditionRef = doc(db, "settings", "audition");
+
+    const unsubscribe = onSnapshot(
+      auditionRef,
+      (snapshot) => {
+        if (!snapshot.exists()) return;
+
+        const data = snapshot.data();
+
+        setTokaiAuditionDate(String(data.tokaiDate ?? ""));
+        setTokyoAuditionDate(String(data.tokyoDate ?? ""));
+      },
+      (error) => {
+        console.error("オーディション日の取得に失敗しました:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
   return (
   <>
     <Header />
@@ -66,8 +90,11 @@ const nextAuditionDate =
       <Logo />
 
       <section className="mx-auto mt-10 max-w-4xl">
-        {nextAuditionDate && (
-  <AuditionCard auditionDate={nextAuditionDate} />
+        {tokaiAuditionDate && tokyoAuditionDate && (
+  <AuditionCard
+    tokaiDate={tokaiAuditionDate}
+    tokyoDate={tokyoAuditionDate}
+  />
 )}
 
         <div className="mb-8 mt-10 flex items-end justify-between">
