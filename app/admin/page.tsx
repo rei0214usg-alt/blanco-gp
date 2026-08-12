@@ -6,10 +6,12 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
   increment,
   onSnapshot,
   serverTimestamp,
   updateDoc,
+  setDoc,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useRouter } from "next/navigation";
@@ -34,6 +36,9 @@ export default function AdminPage() {
   const [racers, setRacers] = useState<Racer[]>([]);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [tokaiAuditionDate, setTokaiAuditionDate] = useState("");
+const [tokyoAuditionDate, setTokyoAuditionDate] = useState("");
+const [isSavingAuditionDates, setIsSavingAuditionDates] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -55,6 +60,25 @@ const [isAddingStaff, setIsAddingStaff] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
 const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
+useEffect(() => {
+  async function loadAuditionDates() {
+    try {
+      const auditionRef = doc(db, "settings", "audition");
+      const auditionSnap = await getDoc(auditionRef);
+
+      if (auditionSnap.exists()) {
+        const data = auditionSnap.data();
+
+        setTokaiAuditionDate(String(data.tokaiDate ?? ""));
+        setTokyoAuditionDate(String(data.tokyoDate ?? ""));
+      }
+    } catch (error) {
+      console.error("オーディション日の読み込みに失敗しました:", error);
+    }
+  }
+
+  loadAuditionDates();
+}, []);
 
 useEffect(() => {
     let unsubscribeRacers: (() => void) | undefined;
@@ -291,7 +315,29 @@ async function saveEdit() {
       </main>
     );
   }
+async function saveAuditionDates() {
+  try {
+    setIsSavingAuditionDates(true);
 
+    const auditionRef = doc(db, "settings", "audition");
+
+    await setDoc(
+      auditionRef,
+      {
+        tokaiDate: tokaiAuditionDate,
+        tokyoDate: tokyoAuditionDate,
+      },
+      { merge: true }
+    );
+
+    alert("オーディション日を保存しました！");
+  } catch (error) {
+    console.error("オーディション日の保存に失敗しました:", error);
+    alert("保存に失敗しました");
+  } finally {
+    setIsSavingAuditionDates(false);
+  }
+}
   return (
     <main className="min-h-screen bg-gray-100 px-5 py-8">
       <section className="mx-auto max-w-3xl">
@@ -319,7 +365,52 @@ async function saveEdit() {
             {isLoggingOut ? "ログアウト中..." : "ログアウト"}
           </button>
         </div>
+<section className="mb-8 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+  <p className="text-sm font-bold tracking-[0.2em] text-red-600">
+    🏁 AUDITION SETTINGS
+  </p>
 
+  <h2 className="mt-2 text-2xl font-black text-black">
+    次回オーディション日
+  </h2>
+
+  <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+    <div>
+      <label className="mb-2 block text-sm font-bold text-gray-700">
+        東海
+      </label>
+
+      <input
+        type="date"
+        value={tokaiAuditionDate}
+        onChange={(event) => setTokaiAuditionDate(event.target.value)}
+        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-black"
+      />
+    </div>
+
+    <div>
+      <label className="mb-2 block text-sm font-bold text-gray-700">
+        東京
+      </label>
+
+      <input
+        type="date"
+        value={tokyoAuditionDate}
+        onChange={(event) => setTokyoAuditionDate(event.target.value)}
+        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-black"
+      />
+    </div>
+  </div>
+
+  <button
+    type="button"
+    onClick={saveAuditionDates}
+    disabled={isSavingAuditionDates}
+    className="mt-6 rounded-xl bg-red-600 px-6 py-3 font-bold text-white disabled:opacity-50"
+  >
+    {isSavingAuditionDates ? "保存中..." : "日程を保存"}
+  </button>
+</section>
         {errorMessage && (
           <p className="mb-5 rounded-2xl bg-red-50 p-4 font-bold text-red-600">
             {errorMessage}

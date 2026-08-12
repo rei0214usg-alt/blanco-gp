@@ -1,7 +1,11 @@
 "use client";
 import Header from "@/components/AppHeader";
 import { useEffect, useState } from "react";
-import { collection, doc, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  onSnapshot,
+} from "firebase/firestore";
 
 import AuditionCard from "@/components/AuditionCard";
 import Logo from "@/components/Logo";
@@ -23,7 +27,7 @@ export default function RacePage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [tokaiAuditionDate, setTokaiAuditionDate] = useState("");
   const [tokyoAuditionDate, setTokyoAuditionDate] = useState("");
-
+ 
   // スタッフ一覧を取得
   useEffect(() => {
     const racersCollection = collection(db, "staffs");
